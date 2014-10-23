@@ -2,7 +2,7 @@
 
 == Intro
 
-This lab demonstrates the benefits of deploying microservice applications to Cloud Foundry and building those applications with the Spring framework.
+This lab demonstrates the benefits of deploying microservice applications to Cloud Foundry and building those applications with the Spring framework. It will also get you more confortable working with the CF CLI.
 
 The lab starts with a monolithic v1 version of the cities-app, which is a Angular.js/Spring Boot/Spring Web/Spring Data application that provides a simple UI for searching for cities that are stored in a relational database. It's pushed as a single CF app.
 
@@ -27,6 +27,13 @@ $ cf api api.run.pivotal.io
 $ cf login
 ----
 
+Delete the PCF-demo app to make the memory available for this lab
+
+[source,bash]
+----
+$ cf delete -r pcfdemo
+----
+
 === Deploy the v1 Monolithic Cities App
 
 Clone or download the cities-monolithic app:
@@ -48,8 +55,7 @@ Validate that the service is created
 [source,bash]
 ----
 $ cf services
-Getting services in org jholmes-org1 / space development as jahatpws@gmail.com...
-OK
+Getting services...
 
 name             service       plan     bound apps
 cities-db        cleardb       spark
@@ -105,6 +111,7 @@ Now it's time to deploy the v2 microservice version of the app. Clone or downloa
 
 [source,bash]
 ----
+$ cd <your workspace root>
 $ git clone https://github.com/jholmes2001/spring-boot-cities
 $ cd spring-boot-cities
 ----
@@ -117,7 +124,7 @@ Under this folder are 3 subfolders
 		
 Check out the https://github.com/jholmes2001/spring-boot-cities[app docs] for a thorough coverage of the application design.
 
-First we'll deploy the cites-service microservice app, which defines in the manifest.yml the 'host' as 'cities-service-${random-word}'.
+First we'll deploy the cites-service microservice app, which defines in the manifest.yml the 'host' as 'cities-service-${random-word}' and 'cities-db' as a service the app will bind to (i.e. it will bind to the same db we created for the v1 app).
 
 [source,bash]
 ----
@@ -172,7 +179,7 @@ cities-db        cleardb         spark    cities-monolithic, cities-service
 cities-ws        user-provided        
 ----
 
-Before pushing the cities-ui app, take a look at the cities-ui manifest.yml to see
+Before pushing the cities-ui app that connects to the cities-service microservice app, take a look at the cities-ui manifest.yml to see
 
 * The app will bind to the cities-ws user provided service you just created
 * The app will use cities-ui-${random-word} as the host (URL prefix)
@@ -195,16 +202,16 @@ applications:
     VERSION: CITIES_APP_2_0
 ----
 
-Now deploy the cities-ui front-end app that connects to the cities-service microservice
+Now deploy the cities-ui app 
 
 [source,bash]
 ----	
 $ cf push
 ----
 
-Test that the app works by opening the URL that is displayed by the 'cf apps' command. The UI should look the same as the v1 version, but it's of course getting the data via REST from the cities-service microservice.
+Test that the app works by opening the cities-ui URL that is displayed by the 'cf apps' command. The UI should look the same as the v1 version, but it's of course getting the data via REST from the cities-service microservice.
 
-Now that the cities-ui app is pushed and bound to the cities-ws service, you can validate the cities-service URL/URI it found in the environment value using 'cf env'
+Now that the cities-ui app is pushed and bound to the cities-ws service, you can use 'cf env' to validate the cities-service URL/URI it found in the environment.
 
 [source,bash]
 ----	
@@ -273,14 +280,14 @@ CITIES_APP_2_0
 
 In a more realistic blue/green deployment scenario, we'd have a cluster of multiple v1 app instances deployed already, but since we're short on memory (i.e. PWS trial 2G limit), we'll stick with our single instance ''cluster''.
 
-Now we add our v2 'canary' to the v1 cluster my mapping the v1 route to cities-ui app.
+Now we add our v2 'canary' to the v1 cluster my mapping the v1 route to cities-ui app (i.e. the -n parameter is the host for cities-monolithic returned by 'cf routes')
 
 [source,bash]
 ----
 $ cf map-route cities-ui cfapps.io -n cities-app-unplodding-tetrarch.cfapps.io
 ----
 
-Now if we repeatedly visit our production URL, we'll see the CF router is load balancing requests between the v1 and v2 apps (try 'cf routes' as well).
+Now if we repeatedly visit our production URL, we'll see the CF router is load balancing requests between the v1 and v2 apps ('cf routes' will show both apps mapped to this route).
 
 [source,bash]
 ----
@@ -290,7 +297,7 @@ $ curl cities-app-unplodding-tetrarch.cfapps.io/cities/version
 CITIES_APP_2_0
 ----
 
-After performing some validation that our v2 canary is working as expected, we're ready to retire the v1 app instances from the cluster my unmapping the production route to the v1 cities-monolithic app.
+After performing some validation that our v2 canary is working as expected, we're ready to retire the v1 app instances from the cluster by unmapping the production route to the v1 cities-monolithic app, using 'cf unmap'
 
 [source,bash]
 ----
@@ -317,12 +324,13 @@ $ cf delete cities-monolithic
 
 Congratulations, you have successfully performed a blue/green deployment, and done so without massive amounts of custom scripting.
 
-Finally, with a bit of spare memory, you can try scaling either tier of your v2 app (but not both at once!).
+Finally, with a bit of spare memory, you can try scaling both tiers of your v2 app.
 
 [source,bash]
 ----
 $ cf scale cities-ui -i 2
 $ cf scale cities-service -i 2
+$ cf apps
 ----
 
 In the second case, cities-ui requests to cities-service will be automatically load balanced. Wow, microservices, Spring and CF are a great combination.
