@@ -4,16 +4,16 @@
 
 This lab demonstrates the benefits of deploying microservice applications to Cloud Foundry and building those applications with the Spring framework.
 
-The lab starts with a  monolithic version of a Angular.js/Spring Boot/Spring Web/Spring Data application that provides a simple UI for searching for cities that are stored in a relational database. It's pushed as a single CF app.
-
-image:docs/components.png["Components",50%]
+The lab starts with a monolithic v1 version of the cities-app, which is a Angular.js/Spring Boot/Spring Web/Spring Data application that provides a simple UI for searching for cities that are stored in a relational database. It's pushed as a single CF app.
 
 It's a perfectly nice app, and does a lot with a little code thanks to the use of Spring Boot, Web and Data projects. But seeing the wisdom of microservices, you decide it's time to refactor this app into two tiers
 
-* a microservice tier that  implements the core cities CRUD operations and provides a REST API via Spring Data Rest
+* a microservice tier that  implements the core cities CRUD operations and provides a REST API via http://projects.spring.io/spring-data-rest/[Spring Data Rest]
 * a UI tier that calls this REST API and uses a CF user provided service to reference the connection parameters from the CF environment
 
-You'll deploy your two tiered microservice app and you'll have a v1 and v2 version deployed. The lab will then take you through a blue/green (or A/B) deployment to route 'production' traffic from your v1 app to your v2 app and demonstrate how the CF router simplifies application upgrades.
+You'll deploy the refactoried v2 cities-app that implements an app for each tier, giving you the flexibility to update and scale each tier independently.
+
+Then lab will then take you through a blue/green (or A/B) deployment to route 'production' traffic from your v1 app to your v2 app and demonstrate how the CF router simplifies application upgrades.
 
 == Instructions
 
@@ -27,14 +27,13 @@ $ cf api api.run.pivotal.io
 $ cf login
 ----
 
-=== Deploy the V1 Monolithic App
+=== Deploy the v1 Monolithic Cities App
 
 Clone or download the cities-monolithic app:
 
 [source,bash]
 ----
 $ git clone https://github.com/jholmes2001/cities-monolithic
-$ cd cities-monolithic
 ----
 
 Create the SQL database used to store the city data
@@ -56,31 +55,15 @@ name             service       plan     bound apps
 cities-db        cleardb       spark
 ----
 
-Deploy the app
-
-[source,bash]
-----
-$ cf push
-----
-
-Validate that the app is working by opening in a browser the url listed by 'cf apps'
-
-[source,bash]
-----	
-$ cf apps
-…
-name                requested state   instances   memory   disk   urls   
-cities-monolithic   started           1/1         512M     1G     cities-app-unplodding-tetrarch.cfapps.io 
-----
-
-Take a look at the manifest.yml to see that 
+Before pushing the app, take a look at the manifest.yml to see that 
 		
-* The host name (the URL prefix) is being set to cities-app-${random-word}
-* The app will bind to the cities-db we created earlier
+* The host name (the URL prefix) is being set to cities-app-${random-word}. This will be the 'production URL' we reference in the blue/green deployment exercise.
+* The app will bind to the cities-db you created earlier
 * An environment variable 'VERSION' is being set to CITIES_APP_1_0
 
 [source,bash]
 ----	
+$ cd cities-monolithic
 $ cat manifest.yml
 ---
 applications:
@@ -98,7 +81,24 @@ applications:
     VERSION: CITIES_APP_1_0
 ----
 
-Take a look at the CityController to see that it is directly invoking a CityRepository object, based on Spring Data, and the UI and data tier are deployed as a single monolithic unit.
+Deploy the app
+
+[source,bash]
+----
+$ cf push
+----
+
+Validate that the app is working by opening in a browser the url listed by 'cf apps'
+
+[source,bash]
+----	
+$ cf apps
+…
+name                requested state   instances   memory   disk   urls   
+cities-monolithic   started           1/1         512M     1G     cities-app-unplodding-tetrarch.cfapps.io 
+----
+
+Now that your v1 app is working, take a look at the https://github.com/jholmes2001/cities-monolithic/blob/master/src/main/java/com/example/cities/controller/CitiesController.java[CityController] to see that it is directly invoking a CityRepository object, based on Spring Data, and the UI and data tier are deployed as a single monolithic unit.
 
 === Deploy the V2 Microservices App
 
