@@ -1,7 +1,6 @@
 = CF Workshop Microservices Lab
 
 == Intro
-Intro
 
 This lab demonstrates the benefits of deploying microservice applications to Cloud Foundry and building those applications with the Spring framework.
 
@@ -9,7 +8,7 @@ The lab starts with a  monolithic version of a Angular.js/Spring Boot/Spring Web
 
 image:docs/components.png["Components",50%]
 
-It's a perfectly nice app, and does a lot with a little code thanks to Spring's insatiable appetite for reducing complexity, but seeing the wisdom of microservices, you decide it's time to refactor this app into two tiers
+It's a perfectly nice app, and does a lot with a little code thanks to the use of Spring Boot, Web and Data projects. But seeing the wisdom of microservices, you decide it's time to refactor this app into two tiers
 
 * a microservice tier that  implements the core cities CRUD operations and provides a REST API via Spring Data Rest
 * a UI tier that calls this REST API and uses a CF user provided service to reference the connection parameters from the CF environment
@@ -38,14 +37,14 @@ $ git clone https://github.com/jholmes2001/cities-monolithic
 $ cd cities-monolithic
 ----
 
-Create the SQL database used to store city data
+Create the SQL database used to store the city data
 
 [source,bash]
 ----
 $ cf create-service cleardb spark cities-db
 ----
 
-Validate that service is created
+Validate that the service is created
 
 [source,bash]
 ----
@@ -72,12 +71,16 @@ $ cf apps
 …
 name                requested state   instances   memory   disk   urls   
 cities-monolithic   started           1/1         512M     1G     cities-app-unplodding-tetrarch.cfapps.io 
+----
 
 Take a look at the manifest.yml to see that 
-		* The host name (the URL prefix) is being set to cities-app-${random-word}
-		* The app will bind to the cities-db we created earlier
-		* An environment variable 'VERSION' is being set to CITIES_APP_1_0
+		
+* The host name (the URL prefix) is being set to cities-app-${random-word}
+* The app will bind to the cities-db we created earlier
+* An environment variable 'VERSION' is being set to CITIES_APP_1_0
 
+[source,bash]
+----	
 $ cat manifest.yml
 ---
 applications:
@@ -108,6 +111,7 @@ $ cd spring-boot-cities
 ----
 
 Under this folder are  3 subfolders
+
 * cities-service - the microservice app
 * cities-ui - the UI app that connects to the microservice
 * cities-client - used by cities-ui to connect to microservice and includes use of Spring Cloud and Netflix Feign
@@ -134,8 +138,10 @@ name                requested state   instances   memory   disk   urls
 cities-service      started           1/1         512M     1G     cities-service-nonterminable-runback.cfapps.io 
 ----
 
-Validate you can hit the REST endpoints for this service using curl
-* Note: for Windows users, download cURL following instructions below or use the copy on the USB drives we've passed around:
+Validate that the REST endpoints are working for this service using curl
+
+* Note: for Windows users, download cURL using following instructions below
+
 ** http://callejoabel.blogspot.com/2013/09/making-curl-work-on-windows-7.html
 
 [source,bash]
@@ -176,6 +182,7 @@ $ cf push
 Test that the app works by opening the URL that is displayed by the 'cf apps' command. The UI should look the same as the V1 version, but it's of course getting the data from the cities microservice.
 
 Take a look at the manifest.yml to see
+
 * The app will bind to the cities-ws user provided service you just created
 * The app will use cities-ui-${random-word} as the host (URL prefix)
 * The app sets the VERSION environment variable to CITIES_APP_2_0
