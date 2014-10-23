@@ -1,112 +1,320 @@
-= Building and consuming a cloud-ready Microservice
+= CF Workshop Microservices Lab
 
-This repository contains a sample project to demonstrate building and deploying a simple Spring Boot based microservice and a web app to consume the microservice. It was built in part to be used as part of a http://www.slideshare.net/ramnivas2/spring-one2014-springcloudconnector[presentation on Spring Cloud Connectors].
+== Intro
+Intro
 
-This project contains three sub-projects:
+This lab demonstrates the benefits of deploying microservice applications to Cloud Foundry and building those applications with the Spring framework.
+
+The lab starts with a  monolithic version of a Angular.js/Spring Boot/Spring Web/Spring Data application that provides a simple UI for searching for cities that are stored in a relational database. It's pushed as a single CF app.
 
 image:docs/components.png["Components",50%]
 
-The following sections describe the components from the bottom up.
+It's a perfectly nice app, and does a lot with a little code thanks to Spring's insatiable appetite for reducing complexity, but seeing the wisdom of microservices, you decide it's time to refactor this app into two tiers
 
-=== cities-service
+* a microservice tier that  implements the core cities CRUD operations and provides a REST API via Spring Data Rest
+* a UI tier that calls this REST API and uses a CF user provided service to reference the connection parameters from the CF environment
 
-The **cities-service** subproject is an example of a very simple but fully functional microservice. The microservice is built using http://projects.spring.io/spring-boot[Spring Boot]. It uses http://projects.spring.io/spring-data-jpa[Spring Data JPA] to access a database and http://projects.spring.io/spring-data-rest[Spring Data REST] to expose the database contents via a REST API. http://cloud.spring.io/spring-cloud-connectors[Spring Cloud Connectors] is used to create the database connection from information exposed by the cloud environment.
+You'll deploy your two tiered microservice app and you'll have a v1 and v2 version deployed. The lab will then take you through a blue/green (or A/B) deployment to route 'production' traffic from your v1 app to your v2 app and demonstrate how the CF router simplifies application upgrades.
 
-This subproject also provides a link:cities-service/demo-script.adoc[script] that can be used to demonstrate construction and deployment of a microservice from scratch with just a few source code files.
+== Instructions
 
-**Key concepts:**
+=== Login to PWS
 
-* Simple application configuration using Spring Boot
-** link:cities-service/src/main/java/com/example/cities/Application.java[Application.java]
-** link:cities-service/src/main/java/com/example/cities/WebConfiguration.java[WebConfiguration.java]
-* Data access using Spring Data JPA and exposing a REST API using Spring Data REST
-** link:cities-service/src/main/java/com/example/cities/repositories/CityRepository.java[CityRepository.java]
-* Consuming a cloud data source using Spring Cloud Connectors
-** link:cities-service/src/main/java/com/example/cities/config/CloudDataSourceConfig.java[CloudDataSourceConfig.java]
-
-=== cities-client
-
-The **cities-client** subproject provides a client library for use by Java apps consuming the microservice. The main goal of this library is to show an example of a http://cloud.spring.io/spring-cloud-connectors[Spring Cloud Connectors] extension for consuming a microservice in a cloud environment.
-
-The client library uses https://github.com/Netflix/feign[Feign] to expose the microservice REST API using a http://martinfowler.com/eaaCatalog/repository.html[Repository] pattern. This provides a nice analog to the Repository abstraction used by Spring Data.
-
-The same Spring Cloud Connectors extension technique could be used to create lower-level REST API connection objects like Spring http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#rest-resttemplate[RestTemplate] or https://hc.apache.org/httpcomponents-client-ga[Apache HttpClient].
-
-**Key concepts:**
-
-* A `ServiceInfo` class to model the connection information needed to access the REST API (just a URL in this example)
-** link:cities-client/src/main/java/com/example/cities/client/cloud/WebServiceInfo.java[WebServiceInfo.java]
-* A `ServiceInfoCreator` class to populate the `ServiceInfo` class from information exposed by Cloud Foundry
-** link:cities-client/src/main/java/com/example/cities/client/cloud/cloudfoundry/CitiesWebServiceInfoCreator.java[CitiesWebServiceInfoCreator.java]
-* A `ServiceConnectionCreator` class to create the Feign repository from the information contained in the `ServiceInfo`
-** link:cities-client/src/main/java/com/example/cities/client/CityRepository.java[CityRepository.java]
-** link:cities-client/src/main/java/com/example/cities/client/CityRepositoryFactory.java[CityRepositoryFactory.java]
-** link:cities-client/src/main/java/com/example/cities/client/cloud/connector/CitiesRepositoryConnectionCreator.java[CitiesRepositoryConnectionCreator.java]
-* Registration of the `ServiceInfoCreator` and `ServiceConnectionCreator` to the Spring Cloud Connectors framework
-** link:cities-client/src/main/resources/META-INF/services/org.springframework.cloud.cloudfoundry.CloudFoundryServiceInfoCreator[CloudFoundryServiceInfoCreator]
-** link:cities-client/src/main/resources/META-INF/services/org.springframework.cloud.service.ServiceConnectorCreator[ServiceConnectorCreator]
-
-=== cities-ui
-
-The **cities-ui** subproject is a web UI application that uses the client library to consume the microservice REST API. It is built using http://projects.spring.io/spring-boot[Spring Boot] and https://angularjs.org[AngularJS].
-
-**Key concepts:**
-
-* Simple application configuration using Spring Boot
-** link:cities-ui/src/main/java/com/example/cities/Application.java[Application.java]
-* Proxying calls from the AngularJS front-end to the repository backend with Spring MVC
-** link:cities-ui/src/main/java/com/example/cities/controller/CitiesController.java[CitiesController.java]
-* Consuming the client library using Spring Cloud Connectors
-** link:cities-ui/src/main/java/com/example/cities/config/CloudConfiguration.java[CloudConfiguration.java]
-
-== Building the project
-
-To build applications and library, you will need to install http://www.gradle.org/installation[Gradle]. Once Gradle is installed, you can run this command from the project root:
+Using the CF CLI, target and login to your run.pivotal.io account
 
 [source,bash]
 ----
-$ gradle assemble
+$ cf api api.run.pivotal.io
+$ cf login
 ----
 
-== Deploying the apps to Cloud Foundry
+=== Deploy the V1 Monolithic App
 
-To deploy the microservice and web UI applications to Cloud Foundry, you will need to:
-
-* install the http://docs.cloudfoundry.org/devguide/installcf/install-go-cli.html[Cloud Foundry CLI]
-* use the Cloud Foundry CLI to http://docs.cloudfoundry.org/devguide/installcf/whats-new-v6.html#login[log into your Cloud Foundry system]
-
-=== Deploying the microservice
-
-Use the following commands to create a database service instance for the microservice and push the microservice to Cloud Foundry:
+Clone or download the cities-monolithic app:
 
 [source,bash]
 ----
-$ cf create-service [service-label] [service-plan] cities-db
-$ cd cities-service && cf push && cd ..
+$ git clone https://github.com/jholmes2001/cities-monolithic
+$ cd cities-monolithic
 ----
 
-==== Note on data import
+Create the SQL database used to store city data
 
-The microservice loads a very large dataset at startup to show the power of the paging, sorting, and search capabilities in Spring Data. The default link:cities-service/src/main/resources/import.sql[`import.sql`] file contains just under 43,000 small rows (representing all postal codes in the United States) that get loaded when the application starts.
-
-Free database service tiers on public Cloud Foundry services often limit the size of the database you can use and the number of records you can load at startup. You will likely need to reduce the size of the dataset when deploying to a public Cloud Foundry service with a free database tier. You can use the provided link:data/import-TX.sql[`import-TX.sql`], which contains just under 2,700 rows (representing postal codes in the US state of Texas), or you can edit the `import.sql` file to create your own subset.
-
-The default `import.sql` file works with the in-memory HyperSQL database (HSQLDB) and MySQL. If you want the microservice to use a PostgreSQL database, you can use the link:data/import-pgsql.sql[`import-pgsql.sql`] import file or the reduced link:data/import-TX-pgsql.sql[`import-TX-pgsql.sql`] file.
-
-To use any import file other than the default `import.sql`, copy the file from link:data[`data`] to link:cities-service/src/main/resources[`cities-service/src/main/resources`] and edit the file link:cities-service/src/main/resources/application.properties[`application.properties`] and add a line like this, using the appropriate file name:
-
-[source]
-----
-spring.jpa.properties.hibernate.hbm2ddl.import_files=import-pgsql.sql
-----
-
-A path is not necessary, just the file name will suffice. You will need to re-build the .war file with `gradle assemble` after changing `application.properties`.
-
-=== Deploying the web UI
-
-Once the microservice is deployed and running, you can create a user-provided service with the connection details for the microservice (which will be used by the client library) and then push the web UI app:
 [source,bash]
 ----
-$ cf create-user-provided-service cities-ws -p '{ "uri": "[route to cities-service]", "tag": "cities" }'
-$ cd cities-ui && cf push && cd ..
+$ cf create-service cleardb spark cities-db
 ----
+
+Validate that service is created
+
+[source,bash]
+----
+$ cf services
+Getting services in org jholmes-org1 / space development as jahatpws@gmail.com...
+OK
+
+name             service       plan     bound apps
+cities-db        cleardb       spark
+----
+
+Deploy the app
+
+[source,bash]
+----
+$ cf push
+----
+
+Validate that the app is working by opening in a browser the url listed by 'cf apps'
+
+[source,bash]
+----	
+$ cf apps
+…
+name                requested state   instances   memory   disk   urls   
+cities-monolithic   started           1/1         512M     1G     cities-app-unplodding-tetrarch.cfapps.io 
+
+Take a look at the manifest.yml to see that 
+		* The host name (the URL prefix) is being set to cities-app-${random-word}
+		* The app will bind to the cities-db we created earlier
+		* An environment variable 'VERSION' is being set to CITIES_APP_1_0
+
+$ cat manifest.yml
+---
+applications:
+- name: cities-monolithic
+  memory: 512M
+  instances: 1
+  path: build/libs/cities-monolithic.jar
+  timeout: 180
+  services:
+  - cities-db
+  host: cities-app-${random-word}
+  env:
+    SPRING_PROFILES_ACTIVE: cloud
+    JAVA_OPTS: -Djava.security.egd=file:///dev/urandom
+    VERSION: CITIES_APP_1_0
+----
+
+Take a look at the CityController to see that it is directly invoking a CityRepository object, based on Spring Data, and the UI and data tier are deployed as a single monolithic unit.
+
+=== Deploy the V2 Microservices App
+
+Now it's time to deploy the v2 microservice version of the app. Clone or download the v2 app:
+
+[source,bash]
+----
+$ git clone https://github.com/jholmes2001/spring-boot-cities
+$ cd spring-boot-cities
+----
+
+Under this folder are  3 subfolders
+* cities-service - the microservice app
+* cities-ui - the UI app that connects to the microservice
+* cities-client - used by cities-ui to connect to microservice and includes use of Spring Cloud and Netflix Feign
+		
+** The **cities-client** subproject provides a client library for use by Java apps consuming the microservice. The main goal of this library is to show an example of a http://cloud.spring.io/spring-cloud-connectors[Spring Cloud Connectors] extension for consuming a microservice in a cloud environment.
+**The client library uses https://github.com/Netflix/feign[Feign] to expose the microservice REST API using a http://martinfowler.com/eaaCatalog/repository.html[Repository] pattern. This provides a nice analog to the Repository abstraction used by Spring Data.
+**The same Spring Cloud Connectors extension technique could be used to create lower-level REST API connection objects like Spring http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#rest-resttemplate[RestTemplate] or https://hc.apache.org/httpcomponents-client-ga[Apache HttpClient].
+
+First we'll deploy the cites-service microservice app
+
+[source,bash]
+----
+$ cd cities-service
+$ cf push
+----
+
+Use 'cf apps' to determine the URL to reference the cities microservice. We'll refer to this url as YOUR_CITIES_SERVICE_URL below, and in the example output below YOUR_CITIES_SERVICE_URL=cities-service-nonterminable-runback.cfapps.io
+	
+[source,bash]
+----
+$ cf apps
+…
+name                requested state   instances   memory   disk   urls   
+cities-service      started           1/1         512M     1G     cities-service-nonterminable-runback.cfapps.io 
+----
+
+Validate you can hit the REST endpoints for this service using curl
+* Note: for Windows users, download cURL following instructions below or use the copy on the USB drives we've passed around:
+** http://callejoabel.blogspot.com/2013/09/making-curl-work-on-windows-7.html
+
+[source,bash]
+----			
+$ curl -i YOUR_CITIES_SERVICE_URL/cities
+$ curl -i YOUR_CITIES_SERVICE_URL/cities/search
+$ curl -i YOUR_CITIES_SERVICE_URL/cities/search/nameContains?q=TEMPLE
+$ curl -i YOUR_CITIES_SERVICE_URL/cities/8291
+----
+
+* Create the cities-ws user provided service that will store the cities microservice connection parameters in the CF environment and make them available to the cities UI app.
+** NOTE: YOU MUST USE 'http://' before your URL! (HTTPS will not work)
+
+[source,bash]
+----
+$ cf create-user-provided-service cities-ws -p '{ "uri": "http://YOUR_CITIES_SERVICE_URL", "tag": "cities" }'
+----
+
+Validate the user provided service was created
+
+[source,bash]
+----
+$ cf services
+…
+name             service         plan     bound apps   
+cities-db        cleardb         spark    cities-monolithic, cities-service   
+cities-ws        user-provided        
+----
+
+Now deploy the cities-ui front-end app that connects to the cities-service microservice
+
+[source,bash]
+----	
+$ cd cities-ui
+$ cf push
+----
+
+Test that the app works by opening the URL that is displayed by the 'cf apps' command. The UI should look the same as the V1 version, but it's of course getting the data from the cities microservice.
+
+Take a look at the manifest.yml to see
+* The app will bind to the cities-ws user provided service you just created
+* The app will use cities-ui-${random-word} as the host (URL prefix)
+* The app sets the VERSION environment variable to CITIES_APP_2_0
+
+[source,bash]
+----		
+$ cat manifest.yml
+---
+applications:
+- name: cities-ui
+  memory: 512M
+  instances: 1
+  path: build/libs/cities-ui.jar
+  services: [ cities-ws ]
+  host: cities-ui-${random-word}
+  env:
+    SPRING_PROFILES_ACTIVE: cloud
+    JAVA_OPTS: -Djava.security.egd=file:///dev/urandom
+    VERSION: CITIES_APP_2_0
+----
+
+Now that the cities-ui app is pushed and bound to the cities-ws service, you can validate the URI value using 'cf env'
+
+[source,bash]
+----	
+$ cf env cities-ui
+…
+System-Provided:
+{
+  "VCAP_SERVICES": {
+    "user-provided": [
+      {
+        "credentials": {
+          "tag": "cities",
+          "uri": "http://cities-service-nonterminable-runback.cfapps.io"
+        },
+        "label": "user-provided",
+        "name": "cities-ws",
+        "syslog_drain_url": "",
+        "tags": []
+      }
+    ]
+  }
+}
+
+User-Provided:
+JAVA_OPTS: -Djava.security.egd=file:///dev/urandom
+SPRING_PROFILES_ACTIVE: cloud
+VERSION: CITIES_APP_2_0
+)
+----
+
+Now you can realize the benefits of having a separate microservice that can be scaled and deployed independently of the UI tier. 
+
+=== Perform Blue/Green Deployment
+
+Now you're ready to perform a blue/green deployment. First we'll list our existing routing table:
+
+[source,bash]
+----
+$ cf routes
+…
+host                                      domain      apps
+cities-service-nonterminable-runback      cfapps.io   cities-service
+cities-app-unplodding-tetrarch            cfapps.io   cities-monolithic
+cities-ui-slumberous-arroyo               cfapps.io   cities-ui
+----
+
+The host and domain listed for the cities-monolithic app is the 'production' URL that we want to remain constant during the upgrade process so the clients are not aware that the v1 app is being replaced by V2
+
+We can validate that that this URL is referencing our V1 app by using the /cities/version request mapping to retrieve the VERSION environment variable
+
+-- substitute your URL below
+[source,bash]
+----
+$ curl cities-app-fanback-ineligibleness.cfapps.io/cities/version
+CITIES_APP_1_0
+----
+
+We can also validate the version of the cities-ui route, which is our v2 app
+
+[source,bash]
+----
+$ curl cities-ui-slumberous-arroyo.cfapps.io/cities/version
+CITIES_APP_2_0
+----
+
+In a more realistic blue/green deployment scenario, we'd have a cluster of multiple V1 app instances deployed already, but since we're short on memory, we'll stick with our single instance.
+
+Now we add our v2 'canary' to the v1 'cluster' my mapping the v1 route to cities-ui.
+
+[source,bash]
+----
+$ cf map-route cities-ui cfapps.io -n cities-app-fanback-ineligibleness.cfapps.io
+----
+
+Now if we repeatedly visit our production URL, we'll see the CF router is load balancing requests between the v1 and v2 apps.
+
+[source,bash]
+----
+$ curl cities-app-fanback-ineligibleness.cfapps.io/cities/version
+CITIES_APP_1_0
+$ curl cities-app-fanback-ineligibleness.cfapps.io/cities/version
+CITIES_APP_2_0
+----
+
+As a final step in our blue/green deployment, after we've confirmed that our 'canary' v2 instance is behaving as expected, we retire the v1 app instances from the cluster my unmapping the production route to cities-monolithic.
+
+[source,bash]
+----
+$ cf unmap-route cities-monolithic cfapps.io -n cities-app-fanback-ineligibleness.cfapps.io
+----
+
+Then test our production URL to see all traffic is going to V2:
+
+[source,bash]
+----
+$ curl cities-app-fanback-ineligibleness.cfapps.io/cities/version
+CITIES_APP_2_0
+$ curl cities-app-fanback-ineligibleness.cfapps.io/cities/version
+CITIES_APP_2_0
+…
+----
+
+At this point we can delete our v1 app
+
+[source,bash]
+----
+$ cf delete cities-monolithic
+----
+And have the choice of scaling either tier of our v2 app, i.e.
+
+[source,bash]
+----
+$ cf scale cities-ui -i 2
+$ cf scale cities-service -i 2
+----
+
+In the second case, cities-ui requests to cities-service will be automatically load balanced! 
+
+Wow, microservices, Spring and CF are a great combination!
+
