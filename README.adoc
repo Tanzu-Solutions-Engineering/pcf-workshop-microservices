@@ -333,5 +333,5 @@ $ cf scale cities-service -i 2
 $ cf apps
 ----
 
-In the second case, cities-ui requests to cities-service will be automatically load balanced. Wow, microservices, Spring and CF are a great combination.
+UI request will now be load balanced across two instances of cities-ui, and REST requests made by cities-ui to cities-service will be automatically load balanced as well. Wow, microservices, Spring and CF are a great combination!
 
