@@ -271,7 +271,7 @@ $ curl cities-ui-slumberous-arroyo.cfapps.io/cities/version
 CITIES_APP_2_0
 ----
 
-In a more realistic blue/green deployment scenario, we'd have a cluster of multiple V1 app instances deployed already, but since we're short on memory (i.e. PWS trial 2G limit), we'll stick with our single instance ''cluster''.
+In a more realistic blue/green deployment scenario, we'd have a cluster of multiple v1 app instances deployed already, but since we're short on memory (i.e. PWS trial 2G limit), we'll stick with our single instance ''cluster''.
 
 Now we add our v2 'canary' to the v1 cluster my mapping the v1 route to cities-ui app.
 
