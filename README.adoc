@@ -88,7 +88,7 @@ Deploy the app
 $ cf push
 ----
 
-Validate that the app is working by opening in a browser the url listed by 'cf apps'
+Validate that the app is working by opening in a browser the URL listed by 'cf apps'
 
 [source,bash]
 ----	
@@ -98,9 +98,9 @@ name                requested state   instances   memory   disk   urls
 cities-monolithic   started           1/1         512M     1G     cities-app-unplodding-tetrarch.cfapps.io 
 ----
 
-Now that your v1 app is working, take a look at the https://github.com/jholmes2001/cities-monolithic/blob/master/src/main/java/com/example/cities/controller/CitiesController.java[CityController] to see that it is directly invoking a CityRepository object, based on Spring Data, and the UI and data tier are deployed as a single monolithic unit.
+Now that your v1 app is working, take a look at the https://github.com/jholmes2001/cities-monolithic/blob/master/src/main/java/com/example/cities/controller/CitiesController.java[CityController] to see that it is directly invoking a https://github.com/jholmes2001/cities-monolithic/blob/master/src/main/java/com/example/cities/repositories/CityRepository.java[CityRepository] object, based on Spring Data, and the UI and data tier are deployed as a single monolithic unit.
 
-=== Deploy the V2 Microservices App
+=== Deploy the v2 Microservices App
 
 Now it's time to deploy the v2 microservice version of the app. Clone or download the v2 app:
 
@@ -112,15 +112,13 @@ $ cd spring-boot-cities
 
 Under this folder are  3 subfolders
 
-* cities-service - the microservice app
+* cities-service - the microservice app that exposes a REST API from the https://github.com/jholmes2001/spring-boot-cities/blob/master/cities-service/src/main/java/com/example/cities/repositories/CityRepository.java[CityRepository] class via a few simple RestResource annotations
 * cities-ui - the UI app that connects to the microservice
-* cities-client - used by cities-ui to connect to microservice and includes use of Spring Cloud and Netflix Feign
+* cities-client - client API used by cities-ui to connect to cities-service microservice, leveraging http://projects.spring.io/spring-cloud/[Spring Cloud] and https://github.com/Netflix/feign[Netflix Feign]
 		
-** The **cities-client** subproject provides a client library for use by Java apps consuming the microservice. The main goal of this library is to show an example of a http://cloud.spring.io/spring-cloud-connectors[Spring Cloud Connectors] extension for consuming a microservice in a cloud environment.
-**The client library uses https://github.com/Netflix/feign[Feign] to expose the microservice REST API using a http://martinfowler.com/eaaCatalog/repository.html[Repository] pattern. This provides a nice analog to the Repository abstraction used by Spring Data.
-**The same Spring Cloud Connectors extension technique could be used to create lower-level REST API connection objects like Spring http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#rest-resttemplate[RestTemplate] or https://hc.apache.org/httpcomponents-client-ga[Apache HttpClient].
+Check out the https://github.com/jholmes2001/spring-boot-cities[app docs] for a thorough coverage of the application design.
 
-First we'll deploy the cites-service microservice app
+First we'll deploy the cites-service microservice app, which defines in the manifest.yml the 'host' as 'cities-service-${random-word}'.
 
 [source,bash]
 ----
@@ -128,7 +126,9 @@ $ cd cities-service
 $ cf push
 ----
 
-Use 'cf apps' to determine the URL to reference the cities microservice. We'll refer to this url as YOUR_CITIES_SERVICE_URL below, and in the example output below YOUR_CITIES_SERVICE_URL=cities-service-nonterminable-runback.cfapps.io
+Use 'cf apps' to determine the URL to reference the cities microservice. 
+
+* We'll refer to this URL as YOUR_CITIES_SERVICE_URL below, and in the example output below YOUR_CITIES_SERVICE_URL=cities-service-nonterminable-runback.cfapps.io
 	
 [source,bash]
 ----
@@ -152,8 +152,10 @@ $ curl -i YOUR_CITIES_SERVICE_URL/cities/search/nameContains?q=TEMPLE
 $ curl -i YOUR_CITIES_SERVICE_URL/cities/8291
 ----
 
-* Create the cities-ws user provided service that will store the cities microservice connection parameters in the CF environment and make them available to the cities UI app.
-** NOTE: YOU MUST USE 'http://' before your URL! (HTTPS will not work)
+Create the cities-ws http://docs.pivotal.io/pivotalcf/devguide/services/user-provided.html[user provided service] that will store the cities microservice connection parameters in the CF environment and make them available to the cities-ui app.
+
+* NOTE: YOU MUST USE 'http://' before the YOUR_CITIES_SERVICE_URL! (https will not work)
+* Substitute your specific URL for YOUR_CITIES_SERVICE_URL
 
 [source,bash]
 ----
@@ -175,7 +177,7 @@ Now deploy the cities-ui front-end app that connects to the cities-service micro
 
 [source,bash]
 ----	
-$ cd cities-ui
+$ cd ../cities-ui
 $ cf push
 ----
 
