@@ -11,9 +11,9 @@ It's a perfectly nice app, and does a lot with a little code thanks to the use o
 * a microservice tier that  implements the core cities CRUD operations and provides a REST API via http://projects.spring.io/spring-data-rest/[Spring Data Rest]
 * a UI tier that calls this REST API and uses a CF user provided service to reference the connection parameters from the CF environment
 
-You'll deploy the refactoried v2 cities-app that implements an app for each tier, giving you the flexibility to update and scale each tier independently.
+You'll deploy the refactoried v2 cities-app as two separate apps (an app for each tier), giving you the flexibility to update and scale each tier independently.
 
-Then lab will then take you through a blue/green (or A/B) deployment to route 'production' traffic from your v1 app to your v2 app and demonstrate how the CF router simplifies application upgrades.
+Then the lab will then take you through a blue/green (or A/B) deployment to route 'production' traffic from your v1 app to your v2 app and demonstrate how the CF router simplifies application upgrades.
 
 == Instructions
 
@@ -59,7 +59,7 @@ Before pushing the app, take a look at the manifest.yml to see that
 		
 * The host name (the URL prefix) is being set to cities-app-${random-word}. This will be the 'production URL' we reference in the blue/green deployment exercise.
 * The app will bind to the cities-db you created earlier
-* An environment variable 'VERSION' is being set to CITIES_APP_1_0
+* An environment variable VERSION is being set to CITIES_APP_1_0
 
 [source,bash]
 ----	
@@ -77,7 +77,6 @@ applications:
   host: cities-app-${random-word}
   env:
     SPRING_PROFILES_ACTIVE: cloud
-    JAVA_OPTS: -Djava.security.egd=file:///dev/urandom
     VERSION: CITIES_APP_1_0
 ----
 
@@ -110,7 +109,7 @@ $ git clone https://github.com/jholmes2001/spring-boot-cities
 $ cd spring-boot-cities
 ----
 
-Under this folder are  3 subfolders
+Under this folder are 3 subfolders
 
 * cities-service - the microservice app that exposes a REST API from the https://github.com/jholmes2001/spring-boot-cities/blob/master/cities-service/src/main/java/com/example/cities/repositories/CityRepository.java[CityRepository] class via a few simple RestResource annotations
 * cities-ui - the UI app that connects to the microservice
@@ -173,24 +172,15 @@ cities-db        cleardb         spark    cities-monolithic, cities-service
 cities-ws        user-provided        
 ----
 
-Now deploy the cities-ui front-end app that connects to the cities-service microservice
-
-[source,bash]
-----	
-$ cd ../cities-ui
-$ cf push
-----
-
-Test that the app works by opening the URL that is displayed by the 'cf apps' command. The UI should look the same as the V1 version, but it's of course getting the data from the cities microservice.
-
-Take a look at the manifest.yml to see
+Before pushing the cities-ui app, take a look at the cities-ui manifest.yml to see
 
 * The app will bind to the cities-ws user provided service you just created
 * The app will use cities-ui-${random-word} as the host (URL prefix)
 * The app sets the VERSION environment variable to CITIES_APP_2_0
 
 [source,bash]
-----		
+----	
+$ cd ../cities-ui
 $ cat manifest.yml
 ---
 applications:
@@ -202,11 +192,19 @@ applications:
   host: cities-ui-${random-word}
   env:
     SPRING_PROFILES_ACTIVE: cloud
-    JAVA_OPTS: -Djava.security.egd=file:///dev/urandom
     VERSION: CITIES_APP_2_0
 ----
 
-Now that the cities-ui app is pushed and bound to the cities-ws service, you can validate the URI value using 'cf env'
+Now deploy the cities-ui front-end app that connects to the cities-service microservice
+
+[source,bash]
+----	
+$ cf push
+----
+
+Test that the app works by opening the URL that is displayed by the 'cf apps' command. The UI should look the same as the v1 version, but it's of course getting the data via REST from the cities-service microservice.
+
+Now that the cities-ui app is pushed and bound to the cities-ws service, you can validate the cities-service URL/URI it found in the environment value using 'cf env'
 
 [source,bash]
 ----	
@@ -237,7 +235,7 @@ VERSION: CITIES_APP_2_0
 )
 ----
 
-Now you can realize the benefits of having a separate microservice that can be scaled and deployed independently of the UI tier. 
+Now you can realize the benefits of having a separate microservice that can be scaled and deployed independently of the UI tier. However, let's hold off on scaling until we're done with the blue/green deployment and can delete the v1 app.
 
 === Perform Blue/Green Deployment
 
@@ -253,14 +251,15 @@ cities-app-unplodding-tetrarch            cfapps.io   cities-monolithic
 cities-ui-slumberous-arroyo               cfapps.io   cities-ui
 ----
 
-The host and domain listed for the cities-monolithic app is the 'production' URL that we want to remain constant during the upgrade process so the clients are not aware that the v1 app is being replaced by V2
+The host and domain listed for the cities-monolithic app is the 'production' URL that we want to remain constant during the upgrade process so the clients are not aware that the v1 app is being replaced by the v2 app.
 
-We can validate that that this URL is referencing our V1 app by using the /cities/version request mapping to retrieve the VERSION environment variable
+We can validate that that this URL is referencing our v1 app by using the /cities/version request mapping to retrieve the VERSION environment variable
 
--- substitute your URL below
+* Substitute your URL below
+
 [source,bash]
 ----
-$ curl cities-app-fanback-ineligibleness.cfapps.io/cities/version
+$ curl cities-app-unplodding-tetrarch.cfapps.io/cities/version
 CITIES_APP_1_0
 ----
 
@@ -272,33 +271,33 @@ $ curl cities-ui-slumberous-arroyo.cfapps.io/cities/version
 CITIES_APP_2_0
 ----
 
-In a more realistic blue/green deployment scenario, we'd have a cluster of multiple V1 app instances deployed already, but since we're short on memory, we'll stick with our single instance.
+In a more realistic blue/green deployment scenario, we'd have a cluster of multiple V1 app instances deployed already, but since we're short on memory (PWS trial has 2G limit), we'll stick with our single instance.
 
-Now we add our v2 'canary' to the v1 'cluster' my mapping the v1 route to cities-ui.
-
-[source,bash]
-----
-$ cf map-route cities-ui cfapps.io -n cities-app-fanback-ineligibleness.cfapps.io
-----
-
-Now if we repeatedly visit our production URL, we'll see the CF router is load balancing requests between the v1 and v2 apps.
+Now we add our v2 'canary' to the v1 ''cluster'' my mapping the v1 route to cities-ui app.
 
 [source,bash]
 ----
-$ curl cities-app-fanback-ineligibleness.cfapps.io/cities/version
+$ cf map-route cities-ui cfapps.io -n cities-app-unplodding-tetrarch.cfapps.io
+----
+
+Now if we repeatedly visit our production URL, we'll see the CF router is load balancing requests between the v1 and v2 apps (try 'cf routes' as well).
+
+[source,bash]
+----
+$ curl cities-app-unplodding-tetrarch.cfapps.io/cities/version
 CITIES_APP_1_0
-$ curl cities-app-fanback-ineligibleness.cfapps.io/cities/version
+$ curl cities-app-unplodding-tetrarch.cfapps.io/cities/version
 CITIES_APP_2_0
 ----
 
-As a final step in our blue/green deployment, after we've confirmed that our 'canary' v2 instance is behaving as expected, we retire the v1 app instances from the cluster my unmapping the production route to cities-monolithic.
+After performing some validation that our v2 canary is working as expected, we're ready to retire the v1 app instances from the cluster my unmapping the production route to the v1 cities-monolithic app.
 
 [source,bash]
 ----
-$ cf unmap-route cities-monolithic cfapps.io -n cities-app-fanback-ineligibleness.cfapps.io
+$ cf unmap-route cities-monolithic cfapps.io -n cities-app-unplodding-tetrarch.cfapps.io
 ----
 
-Then test our production URL to see all traffic is going to V2:
+Then test our production URL to see all traffic is going to v2:
 
 [source,bash]
 ----
@@ -315,7 +314,10 @@ At this point we can delete our v1 app
 ----
 $ cf delete cities-monolithic
 ----
-And have the choice of scaling either tier of our v2 app, i.e.
+
+Congratulations, you have successfully performed a blue/green deployment, and done so without massive amounts of custom scripting.
+
+Finally, with a bit of spare memory, you can try scaling either tier of your v2 app (but not both at once!).
 
 [source,bash]
 ----
@@ -323,7 +325,5 @@ $ cf scale cities-ui -i 2
 $ cf scale cities-service -i 2
 ----
 
-In the second case, cities-ui requests to cities-service will be automatically load balanced! 
-
-Wow, microservices, Spring and CF are a great combination!
+In the second case, cities-ui requests to cities-service will be automatically load balanced. Wow, microservices, Spring and CF are a great combination.
 
