@@ -2,7 +2,7 @@
 
 == Intro
 
-This lab demonstrates the benefits of deploying microservice applications to Cloud Foundry and building those applications with the Spring framework. It will also get you more confortable working with the CF CLI.
+This lab demonstrates the benefits of deploying microservice applications to Cloud Foundry and building those applications with the Spring framework. It will also get you more comfortable working with the CF CLI.
 
 The lab starts with a monolithic v1 version of the cities-app, which is a Angular.js/Spring Boot/Spring Web/Spring Data application that provides a simple UI for searching for cities that are stored in a relational database. It's pushed as a single CF app.
 
