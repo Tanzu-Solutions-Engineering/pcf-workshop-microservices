@@ -158,7 +158,7 @@ $ curl -i YOUR_CITIES_SERVICE_URL/cities/search/nameContains?q=TEMPLE
 $ curl -i YOUR_CITIES_SERVICE_URL/cities/8291
 ----
 
-Create the cities-ws http://docs.pivotal.io/pivotalcf/devguide/services/user-provided.html[user provided service] that will store the cities microservice connection parameters in the CF environment and make them available to the cities-ui app.
+Create the cities-ws http://docs.pivotal.io/pivotalcf/devguide/services/user-provided.html[user provided service] that will store the cities-service connection parameters in the CF environment and make them available to the cities-ui app.
 
 * NOTE: YOU MUST USE 'http://' before the YOUR_CITIES_SERVICE_URL! (https will not work)
 * Don't forget to substitute your specific URL for YOUR_CITIES_SERVICE_URL
