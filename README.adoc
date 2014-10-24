@@ -161,7 +161,7 @@ $ curl -i YOUR_CITIES_SERVICE_URL/cities/8291
 Create the cities-ws http://docs.pivotal.io/pivotalcf/devguide/services/user-provided.html[user provided service] that will store the cities microservice connection parameters in the CF environment and make them available to the cities-ui app.
 
 * NOTE: YOU MUST USE 'http://' before the YOUR_CITIES_SERVICE_URL! (https will not work)
-* Substitute your specific URL for YOUR_CITIES_SERVICE_URL
+* Don't forget to substitute your specific URL for YOUR_CITIES_SERVICE_URL
 
 [source,bash]
 ----
@@ -236,7 +236,6 @@ System-Provided:
 }
 
 User-Provided:
-JAVA_OPTS: -Djava.security.egd=file:///dev/urandom
 SPRING_PROFILES_ACTIVE: cloud
 VERSION: CITIES_APP_2_0
 )
@@ -258,11 +257,11 @@ cities-app-unplodding-tetrarch            cfapps.io   cities-monolithic
 cities-ui-slumberous-arroyo               cfapps.io   cities-ui
 ----
 
-The host and domain listed for the cities-monolithic app is the 'production' URL that we want to remain constant during the upgrade process so the clients are not aware that the v1 app is being replaced by the v2 app.
+The host and domain listed for the cities-monolithic app is the 'production' URL that we want to remain constant during the upgrade process so our users are not aware that the v1 app is being replaced by the v2 app.
 
 We can validate that that this URL is referencing our v1 app by using the /cities/version request mapping to retrieve the VERSION environment variable
 
-* Substitute your URL below
+* Substitute your cities-monolithic URL below
 
 [source,bash]
 ----
@@ -280,14 +279,14 @@ CITIES_APP_2_0
 
 In a more realistic blue/green deployment scenario, we'd have a cluster of multiple v1 app instances deployed already, but since we're short on memory (i.e. PWS trial 2G limit), we'll stick with our single instance ''cluster''.
 
-Now we add our v2 'canary' to the v1 cluster my mapping the v1 route to cities-ui app (i.e. the -n parameter is the host for cities-monolithic returned by 'cf routes')
+Now we add our v2 'canary' to the v1 cluster my mapping the v1 'production' route to the cities-ui app (i.e. the -n parameter is the host for cities-monolithic returned by 'cf routes')
 
 [source,bash]
 ----
-$ cf map-route cities-ui cfapps.io -n cities-app-unplodding-tetrarch.cfapps.io
+$ cf map-route cities-ui cfapps.io -n cities-app-unplodding-tetrarch
 ----
 
-Now if we repeatedly visit our production URL, we'll see the CF router is load balancing requests between the v1 and v2 apps ('cf routes' will show both apps mapped to this route).
+Now if we repeatedly visit our production URL, we'll see the CF router is load balancing requests between the v1 and v2 apps.
 
 [source,bash]
 ----
@@ -295,6 +294,18 @@ $ curl cities-app-unplodding-tetrarch.cfapps.io/cities/version
 CITIES_APP_1_0
 $ curl cities-app-unplodding-tetrarch.cfapps.io/cities/version
 CITIES_APP_2_0
+----
+
+Another look at our routes shows both apps are now mapped to the production route as expected
+
+[source,bash]
+----
+$ cf routes
+…
+host                                      domain      apps
+cities-service-nonterminable-runback      cfapps.io   cities-service
+cities-app-unplodding-tetrarch            cfapps.io   cities-monolithic,cities-ui
+cities-ui-slumberous-arroyo               cfapps.io   cities-ui
 ----
 
 After performing some validation that our v2 canary is working as expected, we're ready to retire the v1 app instances from the cluster by unmapping the production route to the v1 cities-monolithic app, using 'cf unmap'
@@ -308,9 +319,9 @@ Then test our production URL to see all traffic is going to v2:
 
 [source,bash]
 ----
-$ curl cities-app-fanback-ineligibleness.cfapps.io/cities/version
+$ curl cities-app-unplodding-tetrarch.cfapps.io/cities/version
 CITIES_APP_2_0
-$ curl cities-app-fanback-ineligibleness.cfapps.io/cities/version
+$ curl cities-app-unplodding-tetrarch.cfapps.io/cities/version
 CITIES_APP_2_0
 …
 ----
@@ -324,7 +335,7 @@ $ cf delete cities-monolithic
 
 Congratulations, you have successfully performed a blue/green deployment, and done so without massive amounts of custom scripting.
 
-Finally, with a bit of spare memory, you can try scaling both tiers of your v2 app.
+Finally, with a bit of spare memory, you can try scaling both tiers of your v2 microservice app.
 
 [source,bash]
 ----
