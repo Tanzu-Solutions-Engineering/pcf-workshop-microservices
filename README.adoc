@@ -27,7 +27,7 @@ $ cf api api.run.pivotal.io
 $ cf login
 ----
 
-Delete the PCF-demo app to make the memory available for this lab
+Delete the PCF-demo app to make the memory from your 2G PWS trail account available for this lab
 
 [source,bash]
 ----
