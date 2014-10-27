@@ -296,6 +296,10 @@ $ curl cities-app-unplodding-tetrarch.cfapps.io/cities/version
 CITIES_APP_2_0
 ----
 
+Our current deployment architecture looks like this:
+
+image:bg-deployment-canary.png["Canary in blue/green deployment",75%]
+
 Another look at our routes shows both apps are now mapped to the production route as expected
 
 [source,bash]
