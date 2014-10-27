@@ -13,7 +13,7 @@ It's a perfectly nice app, and does a lot with a little code thanks to the use o
 
 You'll deploy the refactoried v2 cities-app as two separate apps (an app for each tier), giving you the flexibility to update and scale each tier independently.
 
-Then the lab will then take you through a blue/green (or A/B) deployment to route 'production' traffic from your v1 app to your v2 app and demonstrate how the CF router simplifies application upgrades.
+Then the lab will then take you through a blue/green deployment to route 'production' traffic from your v1 app to your v2 app and demonstrate how the CF router simplifies application upgrades.
 
 == Instructions
 
