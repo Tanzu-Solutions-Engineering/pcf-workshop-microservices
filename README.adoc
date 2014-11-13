@@ -165,7 +165,13 @@ Create the cities-ws http://docs.pivotal.io/pivotalcf/devguide/services/user-pro
 
 [source,bash]
 ----
-$ cf create-user-provided-service cities-ws -p '{ "uri": "http://YOUR_CITIES_SERVICE_URL", "tag": "cities" }'
+$ cf create-user-provided-service cities-ws -p uri,tag
+
+uri> http://YOUR_CITIES_SERVICE_URL
+
+tag> cities
+Creating user provided service cities-ws in org...
+OK
 ----
 
 Validate the user provided service was created
