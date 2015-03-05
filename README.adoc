@@ -155,7 +155,7 @@ Validate that the REST endpoints are working for this service using curl
 $ curl -i YOUR_CITIES_SERVICE_URL/cities
 $ curl -i YOUR_CITIES_SERVICE_URL/cities/search
 $ curl -i YOUR_CITIES_SERVICE_URL/cities/search/nameContains?q=TEMPLE
-$ curl -i YOUR_CITIES_SERVICE_URL/cities/8291
+$ curl -i YOUR_CITIES_SERVICE_URL/cities/829
 ----
 
 Create the cities-ws http://docs.pivotal.io/pivotalcf/devguide/services/user-provided.html[user provided service] that will store the cities-service connection parameters in the CF environment and make them available to the cities-ui app.
