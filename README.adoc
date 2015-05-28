@@ -24,8 +24,6 @@ on Cloud foundry and walk through the 12 factor app design principles  and CF pl
 
 image:./images/Mono-to-Micro.png[Mono to Microservices CNA on CF]
 
-= Rework from Here....
-
 == Intro
 
 This lab demonstrates the benefits of deploying microservice applications to Cloud Foundry and building those applications with the Spring framework. It will also get you more comfortable working with the CF CLI.
@@ -42,6 +40,22 @@ You'll deploy the refactoried v2 cities-app as two separate apps (an app for eac
 Then the lab will then take you through a blue/green deployment to route 'production' traffic from your v1 app to your v2 app and demonstrate how the CF router simplifies application upgrades.
 
 == Instructions
+
+[NOTE]
+The instructions in this document are for Mac/Linux based CLI/Shell. If you are using Windows, you can use link:http://docs.cloudfoundry.org/devguide/installcf/install-go-cli.html#windows[Windows CLI] 
+or a Virtual Box / Vagrant with a Linux VM.
+
+== PART 1: Build and Run a Monolithic App in a container
+
+=== Run the monolithic Spring Boot app in tomcat
+[source,bash]
+----
+$cd pcf-workspace-microservices/mono
+$./gradlew clean
+$./gradlew build
+$java -jar build/libs/cities-monolithic.jar
+----
+
 
 === Login to PWS
 
