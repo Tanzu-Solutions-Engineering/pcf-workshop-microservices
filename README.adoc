@@ -1,7 +1,7 @@
 = Monolithic to Microservices based Cloud Native Apps 
 == Goals
 
-To take a monolithic app, rebuild it using loosely coupled microservices based cloud native app and deploy it on the platform
+To take a monolithic app, rebuild it as cloud native app using loosely coupled microservices and deploy it on the platform
 
 == Prerequisites 
 
