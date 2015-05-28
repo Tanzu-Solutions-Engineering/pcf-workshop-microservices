@@ -1,4 +1,28 @@
-= CF Workshop Microservices Lab
+= Monolithic to Microservices based Cloud Native Apps 
+== Goals
+
+To take a monolithic app, rebuild it using loosely coupled microservices based cloud native app and deploy it on the platform
+
+== Prerequisites 
+
+. Java SDK 1.6+
+. Git link:https://mac.github.com/[github.com]
+. Cloud Foundry CLI link:https://github.com/cloudfoundry/cli/releases[`CF CLI Releases`]
+. Curl link:http://curl.haxx.se/[curl]
+. Pivotal Web Services Account. Create a free trial account here link:http://run.pivotal.io/[`Pivotal Web Services`]
+. Familiarity with Spring link:http://www.spring.io[Spring IO]
+
+== Pre-work
+
+. Fork and Clone link:https://github.com/Pivotal-Field-Engineering/pcf-workspace-microservices/[`PCF Workspace for Microservices`]  
+. Review the link:https://github.com/Pivotal-Field-Engineering/pcf-workspace-microservices/tree/master[Overview] of the `cities` application.  
+
+== Steps
+In this workshop we are going to follow these steps to deploy apps on Cloud foundry and manage the lifecycle of the application. 
+
+image:./images/Mono-to-Micro.png[Mono to Microservices CNA on CF]
+
+= Rework from Here....
 
 == Intro
 
