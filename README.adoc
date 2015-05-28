@@ -18,7 +18,8 @@ To take a monolithic app, rebuild it using loosely coupled microservices based c
 . Review the link:https://github.com/Pivotal-Field-Engineering/pcf-workspace-microservices/tree/master[Overview] of the `cities` application.  
 
 == Steps
-In this workshop we are going to follow these steps to deploy apps on Cloud foundry and manage the lifecycle of the application. 
+In this workshop we are going to follow these steps to first deploy a monolothic app, and then deploy the microservice version of the same app 
+on Cloud foundry and walk through the 12 factor app design principles  and CF platform to support CNA. 
 
 image:./images/Mono-to-Micro.png[Mono to Microservices CNA on CF]
 
