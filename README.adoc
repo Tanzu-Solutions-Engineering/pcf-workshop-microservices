@@ -57,15 +57,24 @@ $java -jar build/libs/cities-monolithic.jar
 ----
 
 === Launch the app 
+Open the App from the Web browser `http://localhost:8080`
+
+image:./images/cities-ui.png[Cities UI]
 
 
 === Discuss issues 
 
 *Runtime/Platform*
-. Scaling
-. Dependency and Coupling
+
+.. Scaling
 
 *Architecture*
+
+.. Dependency and Coupling
+.. Access to mounted, shared filesystems
+.. Peer-to-peer application server clustering
+.. Shared libraries
+.. Configuration files sitting in well-known locations
 
 
 == PART 2: Run the Monolithic App on the Platform
