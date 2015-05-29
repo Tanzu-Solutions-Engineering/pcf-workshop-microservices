@@ -1,4 +1,4 @@
-= Monolithic to Microservices based Cloud Native Apps 
+= Monolithic to Microservices Cloud Native Apps 
 
 == Goals
 
