@@ -24,7 +24,7 @@ on Cloud foundry and walk through the 12 factor app design principles  and CF pl
 
 image:./images/Mono-to-Micro.png[Mono to Microservices CNA on CF]
 
-== Intro
+== Introduction
 
 This lab demonstrates the benefits of deploying microservice applications to Cloud Foundry and building those applications with the Spring framework. It will also get you more comfortable working with the CF CLI.
 
@@ -78,6 +78,203 @@ image:./images/cities-ui.png[Cities UI]
 
 
 == PART 2: Run the Monolithic App on the Platform
+
+Use `cf help` and/or `cf <command> --help` for details on each of the commands below.
+
+. Review the docs: http://docs.pivotal.io/pivotalcf/devguide/deploy-apps/deploy-app.html
+. Login to the PCF Env. Edit and Source the `env` file `cities` folder
++
+[source,bash]
+---
+ export CF_SYSTEM_DOMAIN=
+ export CF_APPS_DOMAIN=
+ export CF_USER=
+ export CF_ORG=
+ export CF_SPACE=
+---
++
+[source,bash]
+----
+$source ./env
+$cf login -a https://api.$CF_SYSTEM_DOMAIN -u $CF_USER -o $CF_ORG -s $CF_SPACE 
+----
+[NOTE]
+add `--skip-ssl-validation` if you are pointing to CF installation which is using self signed certificates. 
+
++
+. Verify you are logged in with your own userid (*not admin*) and targeted to your PCF instance:
++
+[source,bash]
+----
+$ cf target
+----
+
+. Push the cities-service:
+Before pushing the app, check if the route exists and we can reach it. 
+
++
+[source,bash]
+----
+$ cd cities-service
+$ cf check-route <first-initial><last-initial>-cities-mono cfapps.io
+$ cf push <first-initial><last-initial>-cities-mono -i 1 -m 512M -p build/libs/cities-monolithic.jar
+----
++
+* Be sure to name your application '<first-initial><last-initial>-cities-mono'
+
+. Verify you can access your application from a Web Browser `http://<first-initial><last-initial>-cities-mono.cfapps.io`
+
+
+
+=== Health, logging & events via the CLI
+
+Learning about how your application is performing is critical to help you diagnose and troubleshoot potential issues. Cloud Foundry gives you options for viewing the logs.
+
+To tail the logs of your application perform this command:
+[source,bash]
+----
+$ cf logs <first-initial><last-initial>-cities-mono.cfapps.io 
+----
+
+Notice that nothing is showing because there isn't any activity. Use the following curl commmand to see the application working:
+[source,bash]
+----
+$ curl -i http://<first-initial><last-initial>-cities-mono.cfapps.io/cities/10
+----
+
+For other ways of viewing logs check out the documentation here: http://docs.pivotal.io/pivotalcf/devguide/deploy-apps/streaming-logs.html#view
+
+To view recent events, including application crashes, and error codes, you can see them from the App Manager or from the cli. 
+[source,bash]
+----
+$ cf events <first-initial><last-initial>-cities-mono
+----
+
+To view the health of the application you can see from the App Manager or from the cli:
+[source,bash]
+----
+$ cf app <first-initial><last-initial>-cities-mono
+----
+You will get detailed output of the health
+[source,bash]
+----
+Showing health and status for app cities-service in org  / space development as...
+OK
+
+requested state: started
+instances: 1/1
+usage: 512M x 1 instances
+urls: cities-mono.cfapps.io
+last uploaded: Wed May 27 15:53:32 UTC 2015
+stack: cflinuxfs2
+
+     state     since                    cpu    memory           disk           details   
+#0   running   2015-05-27 12:17:55 PM   0.1%   434.5M of 512M   145.4M of 1G      
+----
+
+=== Environment variables
+
+View the environment variable and explanation of link:http://docs.cloudfoundry.org/devguide/deploy-apps/environment-variable.html#view-env [VCAP Env]
+
+[source,bash]
+----
+$ cf env <first-initial><last-initial>-cities-mono
+----
+
+You will get the output similar to this on your terminal
+[source,bash]
+----
+Getting env variables for app rj-cities-service in org Central / space development as rajesh.jain@pivotal.io...
+OK
+
+System-Provided:
+{
+ "VCAP_SERVICES": {
+  "cleardb": [
+   {
+    "credentials": {
+     "hostname": "xxxx",
+     "jdbcUrl": "xxxx",
+     "name": "xxxx",
+     "password": "xxxx",
+     "port": "3306",
+     "uri": "mysql://xxxx?reconnect=true",
+     "username": "xxxx"
+    },
+    "label": "cleardb",
+    "name": "rj-cities-db",
+    "plan": "spark",
+    "tags": [
+     "Data Stores",
+     "Cloud Databases",
+     "Developer Tools",
+     "Data Store",
+     "mysql",
+     "relational"
+    ]
+   }
+  ]
+ }
+}
+
+{
+ "VCAP_APPLICATION": {
+  "application_name": "rj-cities-service",
+  "application_uris": [
+   "rj-cities-service.cfapps.io"
+  ],
+  "application_version": "c3c35527-424f-4dbc-a4ea-115e1250cc5d",
+  "limits": {
+   "disk": 1024,
+   "fds": 16384,
+   "mem": 512
+  },
+  "name": "rj-cities-service",
+  "space_id": "56e1d8ef-e87f-4b1c-930b-e7f46c00e483",
+  "space_name": "development",
+  "uris": [
+   "rj-cities-service.cfapps.io"
+  ],
+  "users": null,
+  "version": "c3c35527-424f-4dbc-a4ea-115e1250cc5d"
+ }
+}
+
+User-Provided:
+SPRING_PROFILES_ACTIVE: cloud
+
+No running env variables have been set
+
+No staging env variables have been set
+----
+
+
+=== Scaling apps
+
+Applications can be scaled via the command line or the console. When we talk about scale, there are two different types of scale: Vertical and Horizontal. Read link:http://docs.cloudfoundry.org/devguide/deploy-apps/cf-scale.html[this] doc on more details on scaling applications. 
+
+When you Vertically scale your application, you are increasing the amount of memory made available to your application. Scaling your application horizontally means that you are adding application instances.
+
+Let's vertically scale the application to 1 GB of RAM. 
+[source,bash]
+----
+$ cf scale <first-initial><last-initial>-cities-mono -m 1G
+----
+
+Now scale your application down to 512 MB.
+
+Next, let's scale up your application to 2 instances
+[source,bash]
+----
+$ cf scale scale <first-initial><last-initial>-cities-mono -i 2
+----
+
+To check the status of your applications you can check from the command line to see how many instances your app is running and their current state
+[source,bash]
+----
+$ cf app <first-initial><last-initial>-cities-mono
+----
+
 
 == PART 3: Re-design the app using Microservice for the Platform
 
