@@ -56,6 +56,24 @@ $./gradlew build
 $java -jar build/libs/cities-monolithic.jar
 ----
 
+=== Launch the app 
+
+
+=== Discuss issues 
+
+*Runtime/Platform*
+. Scaling
+. Dependency and Coupling
+
+*Architecture*
+
+
+== PART 2: Run the Monolithic App on the Platform
+
+== PART 3: Re-design the app using Microservice for the Platform
+
+== PART 4: Build for continuous delivery
+
 
 === Login to PWS
 
