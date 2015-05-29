@@ -313,86 +313,14 @@ Delete the PCF cities-mono app
 $ cf delete -r <first-initial><last-initial>-cities-monolithic
 ----
 
-=== Build the Micro Service version of the App. 
-
-Clone or download the cities-monolithic app:
-
-[source,bash]
-----
-$ git clone https://github.com/jholmes2001/cities-monolithic
-----
-
-Create the SQL database used to store the city data
-
-[source,bash]
-----
-$ cf create-service cleardb spark cities-db
-----
-
-Validate that the service is created
-
-[source,bash]
-----
-$ cf services
-Getting services...
-
-name             service       plan     bound apps
-cities-db        cleardb       spark
-----
-
-Before pushing the app, take a look at the manifest.yml to see that 
-		
-* The host name (the URL prefix) is being set to cities-app-${random-word}. This will be the 'production URL' we reference in the blue/green deployment exercise.
-* The app will bind to the cities-db you created earlier
-* An environment variable VERSION is being set to CITIES_APP_1_0
-
-[source,bash]
-----	
-$ cd cities-monolithic
-$ cat manifest.yml
----
-applications:
-- name: cities-monolithic
-  memory: 512M
-  instances: 1
-  path: build/libs/cities-monolithic.jar
-  timeout: 180
-  services:
-  - cities-db
-  host: cities-app-${random-word}
-  env:
-    SPRING_PROFILES_ACTIVE: cloud
-    VERSION: CITIES_APP_1_0
-----
-
-Deploy the app
-
-[source,bash]
-----
-$ cf push
-----
-
-Validate that the app is working by opening in a browser the URL listed by 'cf apps'
-
-[source,bash]
-----	
-$ cf apps
-…
-name                requested state   instances   memory   disk   urls   
-cities-monolithic   started           1/1         512M     1G     cities-app-unplodding-tetrarch.cfapps.io 
-----
-
-Now that your v1 app is working, take a look at the https://github.com/jholmes2001/cities-monolithic/blob/master/src/main/java/com/example/cities/controller/CitiesController.java[CityController] to see that it is directly invoking a https://github.com/jholmes2001/cities-monolithic/blob/master/src/main/java/com/example/cities/repositories/CityRepository.java[CityRepository] object, based on Spring Data, and the UI and data tier are deployed as a single monolithic unit.
-
 === Deploy the v2 Microservices App
 
-Now it's time to deploy the v2 microservice version of the app. Clone or download the v2 app:
+Now it's time to deploy the v2 microservice version of the app:
 
 [source,bash]
 ----
-$ cd <your workspace root>
-$ git clone https://github.com/jholmes2001/spring-boot-cities
-$ cd spring-boot-cities
+$ cd micro
+$ ./gradlew assemble
 ----
 
 Under this folder are 3 subfolders
@@ -401,7 +329,7 @@ Under this folder are 3 subfolders
 * cities-ui - the UI app that connects to the microservice
 * cities-client - client API used by cities-ui to connect to cities-service microservice, leveraging http://projects.spring.io/spring-cloud/[Spring Cloud] and https://github.com/Netflix/feign[Netflix Feign]
 		
-Check out the https://github.com/jholmes2001/spring-boot-cities[app docs] for a thorough coverage of the application design.
+Check out the https://github.com/Pivotal-Field-Engineering/pcf-workspace-microservices/[app docs] for a thorough coverage of the application design.
 
 First we'll deploy the cites-service microservice app, which defines in the manifest.yml the 'host' as 'cities-service-${random-word}' and 'cities-db' as a service the app will bind to (i.e. it will bind to the same db we created for the v1 app).
 
