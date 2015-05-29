@@ -67,6 +67,8 @@ image:./images/cities-ui.png[Cities UI]
 *Runtime/Platform*
 
 .. Scaling
+.. 
+
 
 *Architecture*
 
@@ -78,6 +80,8 @@ image:./images/cities-ui.png[Cities UI]
 
 
 == PART 2: Run the Monolithic App on the Platform
+
+=== Pushing the cities-mono app using CLI
 
 Use `cf help` and/or `cf <command> --help` for details on each of the commands below.
 
