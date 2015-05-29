@@ -50,10 +50,10 @@ or a Virtual Box / Vagrant with a Linux VM.
 === Run the monolithic Spring Boot app in tomcat
 [source,bash]
 ----
-$cd pcf-workspace-microservices/mono
-$./gradlew clean
-$./gradlew build
-$java -jar build/libs/cities-monolithic.jar
+$ cd pcf-workspace-microservices/mono
+$ ./gradlew clean
+$ ./gradlew build
+$ java -jar build/libs/cities-monolithic.jar
 ----
 
 === Launch the app 
@@ -99,8 +99,8 @@ Use `cf help` and/or `cf <command> --help` for details on each of the commands b
 +
 [source,bash]
 ----
-$source ./env
-$cf login -a https://api.$CF_SYSTEM_DOMAIN -u $CF_USER -o $CF_ORG -s $CF_SPACE 
+$ source ./env
+$ cf login -a https://api.$CF_SYSTEM_DOMAIN -u $CF_USER -o $CF_ORG -s $CF_SPACE 
 ----
 [NOTE]
 add `--skip-ssl-validation` if you are pointing to CF installation which is using self signed certificates. 
@@ -119,14 +119,14 @@ Before pushing the app, check if the route exists and we can reach it.
 +
 [source,bash]
 ----
-$ cd cities-service
-$ cf check-route <first-initial><last-initial>-cities-mono cfapps.io
-$ cf push <first-initial><last-initial>-cities-mono -i 1 -m 512M -p build/libs/cities-monolithic.jar
+$ cd mono
+$ cf check-route <first-initial><last-initial>-cities-monolithic cfapps.io
+$ cf push <first-initial><last-initial>-cities-monolithic -i 1 -m 512M -p build/libs/cities-monolithic.jar
 ----
 +
-* Be sure to name your application '<first-initial><last-initial>-cities-mono'
+* Be sure to name your application '<first-initial><last-initial>-cities-monolithic'
 
-. Verify you can access your application from a Web Browser `http://<first-initial><last-initial>-cities-mono.cfapps.io`
+. Verify you can access your application from a Web Browser `http://<first-initial><last-initial>-cities-monolithic.cfapps.io`
 
 
 
@@ -137,13 +137,16 @@ Learning about how your application is performing is critical to help you diagno
 To tail the logs of your application perform this command:
 [source,bash]
 ----
-$ cf logs <first-initial><last-initial>-cities-mono.cfapps.io 
+// For recent logs
+$ cf logs <first-initial><last-initial>-cities-monolithic.cfapps.io --recent
+// For current logs
+$ cf logs <first-initial><last-initial>-cities-monolithic.cfapps.io 
 ----
 
 Notice that nothing is showing because there isn't any activity. Use the following curl commmand to see the application working:
 [source,bash]
 ----
-$ curl -i http://<first-initial><last-initial>-cities-mono.cfapps.io/cities/10
+$ curl -i http://<first-initial><last-initial>-cities-monolithic.cfapps.io/cities/10
 ----
 
 For other ways of viewing logs check out the documentation here: http://docs.pivotal.io/pivotalcf/devguide/deploy-apps/streaming-logs.html#view
@@ -151,29 +154,32 @@ For other ways of viewing logs check out the documentation here: http://docs.piv
 To view recent events, including application crashes, and error codes, you can see them from the App Manager or from the cli. 
 [source,bash]
 ----
-$ cf events <first-initial><last-initial>-cities-mono
+$ cf events <first-initial><last-initial>-cities-monolithic
 ----
 
 To view the health of the application you can see from the App Manager or from the cli:
+
++
 [source,bash]
 ----
-$ cf app <first-initial><last-initial>-cities-mono
+$ cf app <first-initial><last-initial>-cities-monolithic
 ----
++
 You will get detailed output of the health
 [source,bash]
 ----
-Showing health and status for app cities-service in org  / space development as...
+Showing health and status for app cities-monolithic in org Central / space development as ...
 OK
 
 requested state: started
 instances: 1/1
 usage: 512M x 1 instances
-urls: cities-mono.cfapps.io
-last uploaded: Wed May 27 15:53:32 UTC 2015
+urls: cities-app-pisiform-chattiness.cfapps.io, cities-app-unenraptured-shantung.cfapps.io
+last uploaded: Fri May 29 15:51:12 UTC 2015
 stack: cflinuxfs2
 
-     state     since                    cpu    memory           disk           details   
-#0   running   2015-05-27 12:17:55 PM   0.1%   434.5M of 512M   145.4M of 1G      
+     state     since                    cpu    memory         disk           details   
+#0   running   2015-05-29 11:52:14 AM   0.1%   470M of 512M   148.9M of 1G      
 ----
 
 === Environment variables
@@ -182,13 +188,13 @@ View the environment variable and explanation of link:http://docs.cloudfoundry.o
 
 [source,bash]
 ----
-$ cf env <first-initial><last-initial>-cities-mono
+$ cf env <first-initial><last-initial>-cities-monolithic
 ----
 
 You will get the output similar to this on your terminal
 [source,bash]
 ----
-Getting env variables for app rj-cities-service in org Central / space development as rajesh.jain@pivotal.io...
+Getting env variables for app cities-monolithic in org Central / space development as ...
 OK
 
 System-Provided:
@@ -197,12 +203,12 @@ System-Provided:
   "cleardb": [
    {
     "credentials": {
-     "hostname": "xxxx",
-     "jdbcUrl": "xxxx",
-     "name": "xxxx",
-     "password": "xxxx",
+     "hostname": "us-cdbr-iron-east-02.cleardb.net",
+     "jdbcUrl": "jdbc:mysql://xxx@us-cdbr-iron-east-02.cleardb.net:3306/xxx",
+     "name": "xxx",
+     "password": "xxx",
      "port": "3306",
-     "uri": "mysql://xxxx?reconnect=true",
+     "uri": "mysql://xxx@us-cdbr-iron-east-02.cleardb.net:3306/xxx?reconnect=true",
      "username": "xxxx"
     },
     "label": "cleardb",
@@ -210,8 +216,6 @@ System-Provided:
     "plan": "spark",
     "tags": [
      "Data Stores",
-     "Cloud Databases",
-     "Developer Tools",
      "Data Store",
      "mysql",
      "relational"
@@ -223,29 +227,33 @@ System-Provided:
 
 {
  "VCAP_APPLICATION": {
-  "application_name": "rj-cities-service",
+  "application_name": "cities-monolithic",
   "application_uris": [
-   "rj-cities-service.cfapps.io"
+   "cities-app-pisiform-chattiness.cfapps.io",
+   "cities-app-unenraptured-shantung.cfapps.io"
   ],
-  "application_version": "c3c35527-424f-4dbc-a4ea-115e1250cc5d",
+  "application_version": "9efbf06e-2e3a-4752-89db-77f59d570128",
   "limits": {
    "disk": 1024,
    "fds": 16384,
    "mem": 512
   },
-  "name": "rj-cities-service",
+  "name": "cities-monolithic",
   "space_id": "56e1d8ef-e87f-4b1c-930b-e7f46c00e483",
   "space_name": "development",
   "uris": [
-   "rj-cities-service.cfapps.io"
+   "cities-app-pisiform-chattiness.cfapps.io",
+   "cities-app-unenraptured-shantung.cfapps.io"
   ],
   "users": null,
-  "version": "c3c35527-424f-4dbc-a4ea-115e1250cc5d"
+  "version": "9efbf06e-2e3a-4752-89db-77f59d570128"
  }
 }
 
 User-Provided:
+JAVA_OPTS: -Djava.security.egd=file:///dev/urandom
 SPRING_PROFILES_ACTIVE: cloud
+VERSION: CITIES_APP_1_0
 
 No running env variables have been set
 
