@@ -284,33 +284,36 @@ $ cf scale scale <first-initial><last-initial>-cities-mono -i 2
 To check the status of your applications you can check from the command line to see how many instances your app is running and their current state
 [source,bash]
 ----
-$ cf app <first-initial><last-initial>-cities-mono
+$ cf app <first-initial><last-initial>-cities-monolithic
 ----
+
+=== Discuss Issues / advantages of the platform
+
+*Runtime/Platform*
+
+.. Scaling
+.. 
+
+
+*Architecture*
+
+.. Dependency and Coupling
+.. Access to mounted, shared filesystems
+.. Peer-to-peer application server clustering
+.. Shared libraries
+.. Configuration files sitting in well-known locations
 
 
 == PART 3: Re-design the app using Microservice for the Platform
 
-== PART 4: Build for continuous delivery
-
-
-=== Login to PWS
-
-Using the CF CLI, target and login to your run.pivotal.io account
+Delete the PCF cities-mono app 
 
 [source,bash]
 ----
-$ cf api api.run.pivotal.io
-$ cf login
+$ cf delete -r <first-initial><last-initial>-cities-monolithic
 ----
 
-Delete the PCF-demo app to make the memory from your 2G PWS trail account available for this lab
-
-[source,bash]
-----
-$ cf delete -r pcfdemo
-----
-
-=== Deploy the v1 Monolithic Cities App
+=== Build the Micro Service version of the App. 
 
 Clone or download the cities-monolithic app:
 
@@ -631,4 +634,9 @@ $ cf apps
 ----
 
 UI request will now be load balanced across two instances of cities-ui, and REST requests made by cities-ui to cities-service will be automatically load balanced as well. Wow, microservices, Spring and CF are a great combination!
+
+
+== PART 4: Build for continuous delivery
+
+
 
