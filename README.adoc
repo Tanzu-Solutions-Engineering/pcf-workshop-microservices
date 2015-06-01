@@ -62,7 +62,7 @@ Open the App from the Web browser `http://localhost:8080`
 image:./images/cities-ui.png[Cities UI]
 
 
-=== Discuss issues 
+=== Discuss issues and List them on a Whiteboard
 
 *Runtime/Platform*
 
@@ -287,7 +287,7 @@ To check the status of your applications you can check from the command line to 
 $ cf app <first-initial><last-initial>-cities-monolithic
 ----
 
-=== Discuss Issues / advantages of the platform
+=== Discuss Issues / Advantages of the platform/Strike from Whiteboard
 
 *Runtime/Platform*
 
@@ -454,6 +454,25 @@ VERSION: CITIES_APP_2_0
 )
 ----
 
+=== Discuss Issues / Advantages of the Platform+Microservices/Strike from Whiteboard
+
+*Runtime/Platform*
+
+.. Scaling
+.. 
+
+
+*Architecture*
+
+.. Dependency and Coupling
+.. Access to mounted, shared filesystems
+.. Peer-to-peer application server clustering
+.. Shared libraries
+.. Configuration files sitting in well-known locations
+
+
+== PART 4: Build for continuous delivery
+
 At this point, you are prepared to reap the benefits of having a separate microservice that can be scaled and deployed independently of the UI tier. However, let's hold off on scaling until we're done with the blue/green deployment and can delete the v1 app (a PWS trial has a 2G limit, which we're not too far from at this point).
 
 === Perform Blue/Green Deployment
@@ -564,7 +583,21 @@ $ cf apps
 UI request will now be load balanced across two instances of cities-ui, and REST requests made by cities-ui to cities-service will be automatically load balanced as well. Wow, microservices, Spring and CF are a great combination!
 
 
-== PART 4: Build for continuous delivery
 
 
+=== Wrap up with How to build Cloud Native Application on the Platform
+
+*Runtime/Platform*
+
+.. Scaling
+.. 
+
+
+*Architecture*
+
+.. Dependency and Coupling
+.. Access to mounted, shared filesystems
+.. Peer-to-peer application server clustering
+.. Shared libraries
+.. Configuration files sitting in well-known locations
 
