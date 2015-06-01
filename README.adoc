@@ -585,13 +585,12 @@ UI request will now be load balanced across two instances of cities-ui, and REST
 
 
 
-=== Wrap up with How to build Cloud Native Application on the Platform
+=== Wrap up "How to build Cloud Native Application on the Platform with Countinous Deployment"
 
 *Runtime/Platform*
 
 .. Scaling
 .. 
-
 
 *Architecture*
 
@@ -600,4 +599,10 @@ UI request will now be load balanced across two instances of cities-ui, and REST
 .. Peer-to-peer application server clustering
 .. Shared libraries
 .. Configuration files sitting in well-known locations
+
+
+image:./images/Mono-to-Micro.png[Mono to Microservices CNA on CF]
+
+== Q/A
+
 
